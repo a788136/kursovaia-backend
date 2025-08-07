@@ -1,7 +1,8 @@
+// routes/tags.js
 const router = require('express').Router();
 const Inventory = require('../models/Inventory');
 
-// GET /tags — список всех уникальных тегов
+// GET /tags — все уникальные теги
 router.get('/', async (req, res) => {
   const allInventories = await Inventory.find({}, 'tags');
   const tagsSet = new Set();

@@ -3,12 +3,10 @@ const Inventory = require('../models/Inventory');
 
 // GET /inventories/latest — последние инвентаризации (например, 10 штук)
 router.get('/latest', async (req, res) => {
-  const inventories = await Inventory.find()
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .populate('creator', 'name avatar');
-  res.json(inventories);
+  const inventories = await Inventory.find().sort({ createdAt: -1 }).limit(10);
+  res.json(inventories); // обязательно res.json(Массив)
 });
+
 
 // GET /inventories/top — топ-5 по количеству items
 router.get('/top', async (req, res) => {
