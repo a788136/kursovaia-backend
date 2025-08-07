@@ -19,6 +19,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/auth', require('./routes/auth'));
+app.use('/inventories', require('./routes/inventories'));
+app.use('/tags', require('./routes/tags'));
 
 connectDB().then(() => {
   app.listen(5000, () => console.log('Backend running on http://localhost:5000'));
