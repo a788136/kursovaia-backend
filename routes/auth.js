@@ -10,19 +10,22 @@ const [PRIMARY_CLIENT] = (process.env.CLIENT_URL || 'http://localhost:5173')
 const isProd = process.env.NODE_ENV === 'production';
 
 // Инициируем Google OAuth
-router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  prompt: 'select_account'
-}));
+router.get(
+  '/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+  })
+);
 
 // Callback от Google
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    failureRedirect: `${PRIMARY_CLIENT}/login?error=oauth_failed`
+    failureRedirect: `${PRIMARY_CLIENT}/login?error=oauth_failed`,
   }),
   (req, res) => {
-    // Успешный вход — редирект на фронт
+    console.log('[OAUTH OK]', { userId: req.user?.id, email: req.user?.email });
     res.redirect(`${PRIMARY_CLIENT}/inventories`);
   }
 );
@@ -38,16 +41,14 @@ router.get('/me', (req, res) => {
 
 // Выход
 router.get('/logout', (req, res, next) => {
-  // Удаляем серверную сессию
   req.logout(err => {
     if (err) return next(err);
     req.session?.destroy(() => {
-      // Чистим куку (параметры должны совпадать с настройками в app.js)
       res.clearCookie('connect.sid', {
         path: '/',
         httpOnly: true,
         sameSite: isProd ? 'none' : 'lax',
-        secure: isProd
+        secure: isProd,
       });
       res.json({ ok: true });
     });
@@ -59,10 +60,7 @@ router.get('/debug', (req, res) => {
   res.json({
     isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
     user: req.user || null,
-    session: {
-      id: req.sessionID,
-      cookie: req.session?.cookie
-    }
+    session: { id: req.sessionID, cookie: req.session?.cookie },
   });
 });
 

@@ -18,23 +18,28 @@ const isProd = process.env.NODE_ENV === 'production';
 console.log('[CORS] allowed origins:', allowedOrigins);
 app.set('trust proxy', 1); // Render за прокси — нужно для secure cookie
 
-app.use(cors({
-  origin(origin, cb) {
-    // Разрешаем запросы с указанных фронтов и без Origin (например, Postman)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error(`Not allowed by CORS: ${origin}`));
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin(origin, cb) {
+      // Разрешаем запросы с указанных фронтов и без Origin (Postman/health checks)
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error(`Not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 
-// На всякий случай явно отвечаем на preflight
-app.options('*', cors({
-  origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error(`Not allowed by CORS: ${origin}`));
-  },
-  credentials: true,
-}));
+// Preflight
+app.options(
+  '*',
+  cors({
+    origin(origin, cb) {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error(`Not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 
 // Чтобы браузер принимал куки между доменами
 app.use((req, res, next) => {
@@ -51,17 +56,19 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 /** ---------- Сессии ---------- **/
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'dev_secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: isProd,                     // на Render — true
-    sameSite: isProd ? 'none' : 'lax',  // кросс-доменно — только 'none'
-    maxAge: 1000 * 60 * 60 * 24 * 7     // 7 дней
-  }
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'dev_secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: isProd,                    // на Render — true
+      sameSite: isProd ? 'none' : 'lax', // кросс-домен — только 'none'
+      maxAge: 1000 * 60 * 60 * 24 * 7,   // 7 дней
+    },
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -73,12 +80,13 @@ app.use('/auth', require('./routes/auth'));
 app.use('/inventories', require('./routes/inventories'));
 app.use('/tags', require('./routes/tags'));
 
-/** ---------- Ошибки CORS (чтоб не падал процесс) ---------- **/
+/** ---------- Ошибки CORS/общие ---------- **/
 app.use((err, req, res, next) => {
   if (err && /Not allowed by CORS/.test(err.message)) {
     return res.status(403).json({ ok: false, error: 'CORS_FORBIDDEN', message: err.message });
   }
-  next(err);
+  console.error('[UNCAUGHT ERROR]', err);
+  res.status(500).json({ ok: false, error: 'INTERNAL', message: err.message });
 });
 
 /** ---------- Запуск ---------- **/
