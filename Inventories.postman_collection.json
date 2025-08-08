@@ -1,0 +1,91 @@
+{
+  "info": {
+    "name": "Inventories CRUD",
+    "_postman_id": "a1b2c3d4-e5f6-7890-1234-abcdef123456",
+    "description": "CRUD тесты для инвентаризаций",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET all inventories",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://kursovaia-backend.onrender.com/inventories",
+          "protocol": "https",
+          "host": ["kursovaia-backend", "onrender", "com"],
+          "path": ["inventories"]
+        }
+      }
+    },
+    {
+      "name": "GET inventory by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://kursovaia-backend.onrender.com/inventories/{{inventoryId}}",
+          "protocol": "https",
+          "host": ["kursovaia-backend", "onrender", "com"],
+          "path": ["inventories", "{{inventoryId}}"]
+        }
+      }
+    },
+    {
+      "name": "POST create inventory",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Тестовая инвентаризация\",\n  \"description\": \"Описание теста\",\n  \"category\": \"tools\",\n  \"tags\": [\"тест\", \"инструменты\"],\n  \"isPublic\": true,\n  \"itemsCount\": 5,\n  \"creator\": \"{{userId}}\"\n}"
+        },
+        "url": {
+          "raw": "https://kursovaia-backend.onrender.com/inventories",
+          "protocol": "https",
+          "host": ["kursovaia-backend", "onrender", "com"],
+          "path": ["inventories"]
+        }
+      }
+    },
+    {
+      "name": "PUT update inventory",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Обновлённая инвентаризация\",\n  \"description\": \"Новое описание\",\n  \"category\": \"updated-tools\",\n  \"tags\": [\"обновлено\"],\n  \"isPublic\": false\n}"
+        },
+        "url": {
+          "raw": "https://kursovaia-backend.onrender.com/inventories/{{inventoryId}}",
+          "protocol": "https",
+          "host": ["kursovaia-backend", "onrender", "com"],
+          "path": ["inventories", "{{inventoryId}}"]
+        }
+      }
+    },
+    {
+      "name": "DELETE inventory",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "https://kursovaia-backend.onrender.com/inventories/{{inventoryId}}",
+          "protocol": "https",
+          "host": ["kursovaia-backend", "onrender", "com"],
+          "path": ["inventories", "{{inventoryId}}"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "inventoryId", "value": "PUT_INVENTORY_ID_HERE" },
+    { "key": "userId", "value": "PUT_USER_ID_HERE" }
+  ]
+}

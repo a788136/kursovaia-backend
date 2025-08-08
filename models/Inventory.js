@@ -1,17 +1,23 @@
-const { Schema, model } = require('mongoose');
+const mongoose = require('mongoose');
 
-const InventorySchema = new Schema({
+const fieldSchema = new mongoose.Schema({
+  name: String,           // Название поля
+  type: String,           // Тип (text, textarea, number, checkbox, link, etc.)
+  description: String,    // Подсказка
+  showInTable: Boolean    // Флаг отображения в таблице
+}, { _id: false });
+
+const inventorySchema = new mongoose.Schema({
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // связь с пользователем
   title: { type: String, required: true },
   description: String,
-  creator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  tags: [{ type: String }],
-  image: String,
-  category: String,
-  itemsCount: { type: Number, default: 0 }, // количество элементов
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  category: String, // строка — можно сделать enum
+  image: String, // URL изображения
+  tags: [String],
+  isPublic: { type: Boolean, default: false },
+  fields: [fieldSchema],
+  customIdFormat: String,
+  createdAt: { type: Date, default: Date.now }
 });
 
-InventorySchema.index({ title: 'text', description: 'text', tags: 'text' }); // Для поиска
-
-module.exports = model('Inventory', InventorySchema);
+module.exports = mongoose.model('Inventory', inventorySchema);
