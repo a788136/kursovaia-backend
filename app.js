@@ -11,14 +11,14 @@ const app = express();
 
 // CORS с поддержкой cookies
 app.use(cors({
-  origin: process.env.CLIENT_URL.split(','),
+  origin: (process.env.CLIENT_URL || 'http://localhost:5173').split(','), // защита от undefined
   credentials: true
 }));
 
 app.use(express.json());
 
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
