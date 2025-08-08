@@ -1,3 +1,4 @@
+// app.js
 const express = require('express');
 const session = require('express-session');
 require('dotenv').config();
@@ -15,13 +16,15 @@ console.log('[CORS] allowed origins:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
     return cb(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true
 }));
 
-// Чтобы заголовок Access-Control-Allow-Credentials был всегда
+// Чтобы браузер принимал куки между доменами
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
@@ -30,7 +33,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 /** ---------- Сессии ---------- **/
-// Render/Vercel за прокси — иначе secure-cookie не отправится
+// Render за прокси — нужно для корректной работы secure cookie
 app.set('trust proxy', 1);
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -50,12 +53,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-/** ---------- API роуты ---------- **/
+/** ---------- Роуты ---------- **/
 app.use('/auth', require('./routes/auth'));
 app.use('/inventories', require('./routes/inventories'));
 app.use('/tags', require('./routes/tags'));
 
-/** ---------- Start ---------- **/
+/** ---------- Запуск ---------- **/
 connectDB().then(() => {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
