@@ -7,7 +7,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    res.redirect('http://localhost:5173/inventories'); 
+    res.redirect('https://kursovaia-frontend.vercel.app/inventories'); 
     // или https://твой-фронтенд-домен/inventories если деплой
   }
 );
