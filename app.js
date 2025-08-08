@@ -4,17 +4,27 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const passport = require('passport');
 require('./config/passport');
+const cors = require('cors');
 const path = require('path');
 
 const app = express();
 
-// Middleware
+// CORS с поддержкой cookies
+app.use(cors({
+  origin: process.env.CLIENT_URL.split(','),
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  }
 }));
 
 app.use(passport.initialize());
@@ -24,15 +34,6 @@ app.use(passport.session());
 app.use('/auth', require('./routes/auth'));
 app.use('/inventories', require('./routes/inventories'));
 app.use('/tags', require('./routes/tags'));
-
-// Раздаём статические файлы фронтенда
-const clientPath = path.join(__dirname, 'client', 'dist'); // если билд React в client/dist
-app.use(express.static(clientPath));
-
-// Для всех остальных маршрутов отдаём index.html (React Router)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientPath, 'index.html'));
-});
 
 // Запуск сервера
 connectDB().then(() => {

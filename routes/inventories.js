@@ -1,7 +1,13 @@
 const router = require('express').Router();
 const Inventory = require('../models/Inventory');
 
-// GET /inventories — список всех (позже можно фильтровать по владельцу или публичности)
+// Middleware для проверки авторизации
+function ensureAuth(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  return res.status(401).json({ error: 'Не авторизован' });
+}
+
+// GET /inventories — список всех
 router.get('/', async (req, res) => {
   try {
     const inventories = await Inventory.find().populate('owner', 'name avatar');
@@ -11,7 +17,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /inventories/:id — одна инвентаризация
+// GET /inventories/:id
 router.get('/:id', async (req, res) => {
   try {
     const inventory = await Inventory.findById(req.params.id).populate('owner', 'name avatar');
@@ -22,11 +28,11 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /inventories — создать
-router.post('/', async (req, res) => {
+// POST /inventories — создать (только авторизованным)
+router.post('/', ensureAuth, async (req, res) => {
   try {
     const inventory = new Inventory({
-      owner: req.body.owner, // ID пользователя
+      owner: req.user._id, // берём из авторизации
       title: req.body.title,
       description: req.body.description,
       category: req.body.category,
@@ -39,30 +45,31 @@ router.post('/', async (req, res) => {
     await inventory.save();
     res.status(201).json(inventory);
   } catch (err) {
+    console.error('Ошибка при создании:', err);
     res.status(500).json({ error: 'Ошибка при создании инвентаризации' });
   }
 });
 
-// PUT /inventories/:id — обновить
-router.put('/:id', async (req, res) => {
+// PUT /inventories/:id
+router.put('/:id', ensureAuth, async (req, res) => {
   try {
-    const updated = await Inventory.findByIdAndUpdate(
-      req.params.id,
+    const updated = await Inventory.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user._id },
       { $set: req.body },
       { new: true }
     );
-    if (!updated) return res.status(404).json({ error: 'Инвентаризация не найдена' });
+    if (!updated) return res.status(404).json({ error: 'Инвентаризация не найдена или нет прав' });
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: 'Ошибка при обновлении инвентаризации' });
   }
 });
 
-// DELETE /inventories/:id — удалить
-router.delete('/:id', async (req, res) => {
+// DELETE /inventories/:id
+router.delete('/:id', ensureAuth, async (req, res) => {
   try {
-    const deleted = await Inventory.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Инвентаризация не найдена' });
+    const deleted = await Inventory.findOneAndDelete({ _id: req.params.id, owner: req.user._id });
+    if (!deleted) return res.status(404).json({ error: 'Инвентаризация не найдена или нет прав' });
     res.json({ message: 'Инвентаризация удалена' });
   } catch (err) {
     res.status(500).json({ error: 'Ошибка при удалении инвентаризации' });

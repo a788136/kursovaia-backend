@@ -5,9 +5,10 @@ const passport = require('passport');
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
+  passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    res.redirect('/'); // или на фронт
+    res.redirect('http://localhost:5173/inventories'); 
+    // или https://твой-фронтенд-домен/inventories если деплой
   }
 );
 
