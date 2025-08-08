@@ -14,7 +14,7 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
     // После успешного входа — редиректим на фронт
-    res.redirect(`${process.env.CLIENT_URL}/inventories`);
+    res.redirect(`${process.env.CLIENT_URL.split(',')[0]}/inventories`);
   }
 );
 
