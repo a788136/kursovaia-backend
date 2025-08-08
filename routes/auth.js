@@ -1,14 +1,20 @@
+// routes/auth.js
 const router = require('express').Router();
 const passport = require('passport');
 
-// Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// Google OAuth — инициируем авторизацию
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email'],
+  prompt: 'select_account'
+}));
 
-router.get('/google/callback',
+// Callback от Google
+router.get(
+  '/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    res.redirect('https://kursovaia-frontend.vercel.app/inventories'); 
-    // или https://твой-фронтенд-домен/inventories если деплой
+    // После успешного входа — редиректим на фронт
+    res.redirect(`${process.env.CLIENT_URL}/inventories`);
   }
 );
 
@@ -16,14 +22,15 @@ router.get('/google/callback',
 router.get('/me', (req, res) => {
   if (req.isAuthenticated()) {
     const { id, name, email, avatar, isAdmin, lang, theme } = req.user;
-    res.json({ id, name, email, avatar, isAdmin, lang, theme });
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
+    return res.json({ id, name, email, avatar, isAdmin, lang, theme });
   }
+  res.status(401).json({ error: 'Not authenticated' });
 });
 
+// Выход
 router.get('/logout', (req, res) => {
   req.logout(() => {
+    res.clearCookie('connect.sid', { path: '/' }); // Чистим куку сессии
     res.send({ ok: true });
   });
 });
