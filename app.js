@@ -5,38 +5,58 @@ const connectDB = require('./config/db');
 const passport = require('passport');
 require('./config/passport');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 
-// CORS с поддержкой cookies
+/** ---------- CORS ---------- **/
+const rawOrigins = process.env.CLIENT_URL || 'http://localhost:5173';
+const allowedOrigins = rawOrigins.split(',').map(s => s.trim()).filter(Boolean);
+console.log('[CORS] allowed origins:', allowedOrigins);
+
 app.use(cors({
-  origin: (process.env.CLIENT_URL || 'http://localhost:5173').split(','), // защита от undefined
+  origin: function (origin, cb) {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error(`Not allowed by CORS: ${origin}`));
+  },
   credentials: true
 }));
 
+// Чтобы заголовок Access-Control-Allow-Credentials был всегда
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
+
 app.use(express.json());
 
+/** ---------- Сессии ---------- **/
+// Render/Vercel за прокси — иначе secure-cookie не отправится
+app.set('trust proxy', 1);
+
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'secret',
+  secret: process.env.SESSION_SECRET || 'dev_secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
+    httpOnly: true,
+    secure: isProd,                   // в проде обязательно HTTPS
+    sameSite: isProd ? 'none' : 'lax',// для разных доменов нужен 'none'
+    maxAge: 1000 * 60 * 60 * 24 * 7   // 7 дней
   }
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-// API роуты
+/** ---------- API роуты ---------- **/
 app.use('/auth', require('./routes/auth'));
 app.use('/inventories', require('./routes/inventories'));
 app.use('/tags', require('./routes/tags'));
 
-// Запуск сервера
+/** ---------- Start ---------- **/
 connectDB().then(() => {
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
 });
